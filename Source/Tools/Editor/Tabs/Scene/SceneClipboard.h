@@ -62,19 +62,13 @@ public:
     ///
     void Copy(Component* component);
     ///
-    void Copy(const ea::vector<Node*>& nodes);
-    ///
-    void Copy(const ea::vector<Component*>& components);
-    ///
-    void Copy(const ea::vector<WeakPtr<Node>>& nodes);
+    void Copy(const ea::hash_set<WeakPtr<Node>>& nodes);
     ///
     void Copy(const ea::hash_set<WeakPtr<Component>>& components);
     ///
     PasteResult Paste(Node* node);
     ///
-    PasteResult Paste(const ea::vector<Node*>& nodes);
-    ///
-    PasteResult Paste(const ea::vector<WeakPtr<Node>>& nodes);
+    PasteResult Paste(const ea::hash_set<WeakPtr<Node>>& nodes);
     ///
     bool HasNodes() const { return !nodes_.empty(); }
     ///

@@ -19,56 +19,36 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
+#pragma once
 
-#include <EASTL/fixed_vector.h>
-
-#include "Gizmo.h"
+#include <Toolbox/Common/UndoStack.h>
 
 namespace Urho3D
 {
 
-Gizmo::Gizmo(Context* context) : Object(context)
+class Tab;
+class SceneTab;
+class ResourceTab;
+
+class UndoSetSelection : public UndoAction
 {
-}
+public:
+    ///
+    UndoSetSelection(Tab* oldTab, ByteVector  oldSelection, Tab* newTab, ByteVector  newSelection);
+    ///
+    bool Undo(Context* context) override;
+    ///
+    bool Redo(Context* context) override;
 
-Gizmo::~Gizmo()
-{
-    UnsubscribeFromAllEvents();
-}
-
-bool Gizmo::IsActive() const
-{
-    return ImGuizmo::IsUsing();
-}
-
-bool Gizmo::ManipulateNode(const Camera* camera, Node* node)
-{
-    ea::fixed_vector<Node*, 1> nodes;
-    nodes.push_back(node);
-    return Manipulate(camera, nodes);
-}
-
-void Gizmo::RenderUI()
-{
-    ui::TextUnformatted("Op:");
-    ui::SameLine(60);
-
-    if (ui::RadioButton("Tr", GetOperation() == GIZMOOP_TRANSLATE))
-        SetOperation(GIZMOOP_TRANSLATE);
-    ui::SameLine();
-    if (ui::RadioButton("Rot", GetOperation() == GIZMOOP_ROTATE))
-        SetOperation(GIZMOOP_ROTATE);
-    ui::SameLine();
-    if (ui::RadioButton("Scl", GetOperation() == GIZMOOP_SCALE))
-        SetOperation(GIZMOOP_SCALE);
-
-    ui::TextUnformatted("Space:");
-    ui::SameLine(60);
-    if (ui::RadioButton("World", GetTransformSpace() == TS_WORLD))
-        SetTransformSpace(TS_WORLD);
-    ui::SameLine();
-    if (ui::RadioButton("Local", GetTransformSpace() == TS_LOCAL))
-        SetTransformSpace(TS_LOCAL);
-}
+protected:
+    ///
+    WeakPtr<Tab> oldTab_;
+    ///
+    ByteVector oldSelection_;
+    ///
+    WeakPtr<Tab> newTab_;
+    ///
+    ByteVector newSelection_;
+};
 
 }

@@ -19,56 +19,57 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
+#include "Tabs/Scene/SceneTab.h"
+#include "EditorUndo.h"
 
-#include <EASTL/fixed_vector.h>
-
-#include "Gizmo.h"
 
 namespace Urho3D
 {
 
-Gizmo::Gizmo(Context* context) : Object(context)
+UndoSetSelection::UndoSetSelection(Tab* oldTab, ByteVector oldSelection, Tab* newTab, ByteVector newSelection)
+    : oldTab_(oldTab)
+    , oldSelection_(std::move(oldSelection))
+    , newTab_(newTab)
+    , newSelection_(std::move(newSelection))
 {
 }
 
-Gizmo::~Gizmo()
+bool UndoSetSelection::Undo(Context* context)
 {
-    UnsubscribeFromAllEvents();
+    bool success = false;
+
+    if (!oldTab_.Expired())
+    {
+        success |= oldTab_->DeserializeSelection(oldSelection_);
+        oldTab_->Activate();
+    }
+
+    if (!newTab_.Expired() && oldTab_ != newTab_)
+    {
+        newTab_->ClearSelection();
+        success = true;
+    }
+
+    return success;
 }
 
-bool Gizmo::IsActive() const
+bool UndoSetSelection::Redo(Context* context)
 {
-    return ImGuizmo::IsUsing();
-}
+    bool success = false;
 
-bool Gizmo::ManipulateNode(const Camera* camera, Node* node)
-{
-    ea::fixed_vector<Node*, 1> nodes;
-    nodes.push_back(node);
-    return Manipulate(camera, nodes);
-}
+    if (!newTab_.Expired())
+    {
+        success |= newTab_->DeserializeSelection(newSelection_);
+        newTab_->Activate();
+    }
 
-void Gizmo::RenderUI()
-{
-    ui::TextUnformatted("Op:");
-    ui::SameLine(60);
+    if (!oldTab_.Expired() && oldTab_ != newTab_)
+    {
+        oldTab_->ClearSelection();
+        success = true;
+    }
 
-    if (ui::RadioButton("Tr", GetOperation() == GIZMOOP_TRANSLATE))
-        SetOperation(GIZMOOP_TRANSLATE);
-    ui::SameLine();
-    if (ui::RadioButton("Rot", GetOperation() == GIZMOOP_ROTATE))
-        SetOperation(GIZMOOP_ROTATE);
-    ui::SameLine();
-    if (ui::RadioButton("Scl", GetOperation() == GIZMOOP_SCALE))
-        SetOperation(GIZMOOP_SCALE);
-
-    ui::TextUnformatted("Space:");
-    ui::SameLine(60);
-    if (ui::RadioButton("World", GetTransformSpace() == TS_WORLD))
-        SetTransformSpace(TS_WORLD);
-    ui::SameLine();
-    if (ui::RadioButton("Local", GetTransformSpace() == TS_LOCAL))
-        SetTransformSpace(TS_LOCAL);
+    return success;
 }
 
 }
